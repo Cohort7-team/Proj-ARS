@@ -58,6 +58,10 @@ path "example/*" {
   capabilities = ["create", "read", "update", "delete", "list", "sudo"]
 }
 
+path "kvv2/*" {
+  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+}
+
 EOT
 }
 
