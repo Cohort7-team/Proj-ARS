@@ -32,7 +32,65 @@ resource "aws_route_table_association" "rt_tb_public" {
   route_table_id = aws_route_table.ars_route.id
 }
 
-# provider "aws" {
-#   access_key = data.vault_aws_access_credentials.creds.access_key
-#   secret_key = data.vault_aws_access_credentials.creds.secret_key
-# }
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.ars_vpc.id
+
+  tags = {
+    Name = "vault-vpc-gw"
+  }
+}
+
+resource "aws_route" "r" {
+  route_table_id            = aws_route_table.ars_route.id
+  destination_cidr_block    = "0.0.0.0/0"
+  gateway_id = aws_internet_gateway.gw.id
+}
+
+resource "aws_subnet" "ars_private_subnet" {
+  count = length(var.ars_private_cidr_block)
+  vpc_id     = aws_vpc.ars_vpc.id
+  cidr_block = var.ars_private_cidr_block[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = "ars-private-subnet-${element(data.aws_availability_zones.available.names,count.index)}"
+  }
+}
+
+resource "aws_route_table" "ars_private_route" {
+  vpc_id = aws_vpc.ars_vpc.id
+
+  tags = {
+    Name = "ars-private-route"
+  }
+}
+
+resource "aws_route_table_association" "rt_tb_private" {
+  count = length(var.ars_private_cidr_block)
+  subnet_id      = aws_subnet.ars_private_subnet[count.index].id
+  route_table_id = aws_route_table.ars_private_route.id
+}
+
+resource "aws_eip" "lb" {
+    domain   = "vpc"
+}
+
+resource "aws_nat_gateway" "ars_ngw" {
+  allocation_id = aws_eip.lb
+  subnet_id     = aws_subnet.ars_private_subnet.id
+
+  tags = {
+    Name = "ars-ngw"
+  }
+
+  # To ensure proper ordering, it is recommended to add an explicit dependency
+  # on the Internet Gateway for the VPC.
+  depends_on = [aws_internet_gateway.gw]
+}
+
+
+resource "aws_route" "private_route" {
+  route_table_id            = aws_route_table.ars_route.id
+  destination_cidr_block    = "0.0.0.0/0"
+  gateway_id = aws_nat_gateway.ars_ngw.id
+}
