@@ -77,7 +77,7 @@ resource "aws_eip" "lb" {
 
 resource "aws_nat_gateway" "ars_ngw" {
   allocation_id = aws_eip.lb.id
-  subnet_id     = aws_subnet.ars_private_subnet[0].id
+  subnet_id     = aws_subnet.ars_public_subnet[0].id
 
   tags = {
     Name = "ars-ngw"
