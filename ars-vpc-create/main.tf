@@ -32,7 +32,7 @@ resource "aws_route_table_association" "rt_tb_public" {
   route_table_id = aws_route_table.ars_route.id
 }
 
-provider "aws" {
-  access_key = data.vault_aws_access_credentials.creds.access_key
-  secret_key = data.vault_aws_access_credentials.creds.secret_key
-}
+# provider "aws" {
+#   access_key = data.vault_aws_access_credentials.creds.access_key
+#   secret_key = data.vault_aws_access_credentials.creds.secret_key
+# }
