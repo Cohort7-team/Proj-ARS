@@ -20,7 +20,7 @@ data "vault_aws_access_credentials" "creds" {
   role    = vault_aws_secret_backend_role.role.name
 }
 
-# provider "aws" {
-#   access_key = data.vault_aws_access_credentials.creds.access_key
-#   secret_key = data.vault_aws_access_credentials.creds.secret_key
-# }
+provider "aws" {
+  access_key = data.vault_aws_access_credentials.creds.access_key
+  secret_key = data.vault_aws_access_credentials.creds.secret_key
+}
