@@ -94,3 +94,46 @@ resource "aws_route" "private_route" {
   destination_cidr_block    = "0.0.0.0/0"
   gateway_id = aws_nat_gateway.ars_ngw.id
 }
+
+#data base subnet
+
+resource "aws_subnet" "ars_db_subnet" {
+  count = length(var.ars_db_cidr_block)
+  vpc_id     = aws_vpc.ars_vpc.id
+  cidr_block = var.ars_db_cidr_block[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = "ars-db-subnet-${element(data.aws_availability_zones.available.names,count.index)}"
+  }
+}
+
+resource "aws_route_table" "ars_db_route" {
+  vpc_id = aws_vpc.ars_vpc.id
+
+  tags = {
+    Name = "ars-db-route"
+  }
+}
+
+resource "aws_route_table_association" "rt_tb_db" {
+  count = length(var.ars_db_cidr_block)
+  subnet_id      = aws_subnet.ars_db_subnet[count.index].id
+  route_table_id = aws_route_table.ars_db_route.id
+}
+
+
+resource "aws_route" "db_route" {
+  route_table_id            = aws_route_table.ars_db_route.id
+  destination_cidr_block    = "0.0.0.0/0"
+  gateway_id = aws_nat_gateway.ars_ngw.id
+}
+
+resource "aws_db_subnet_group" "db_group" {
+  name       = "ars-db-group"
+  subnet_ids = aws_subnet.ars_db_subnet[*].id
+
+  tags = {
+    Name = "ARS DB subnet group"
+  }
+}
